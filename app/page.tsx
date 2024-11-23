@@ -1,101 +1,199 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useRef, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PlusCircle, Trash2, Star } from "lucide-react";
+
+interface Todo {
+  id: number;
+  text: string;
+  isImportant: boolean;
+}
+
+export default function TodoAppComponent() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState("");
+
+  const addTodo = () => {
+    if (newTodo.trim() !== "") {
+      setTodos([
+        ...todos,
+        { id: Date.now(), text: newTodo.trim(), isImportant: false },
+      ]);
+      setNewTodo("");
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      addTodo();
+    }
+  };
+
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter((todo) => todo.id !== id));
+  };
+
+  const toggleImportant = (id: number) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, isImportant: !todo.isImportant } : todo
+      )
+    );
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-6 space-y-6 relative">
+        <div className="absolute top-4 right-4">
+          <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <h1 className="text-3xl font-bold text-center text-gray-800">
+          Todo List
+        </h1>
+        <div className="flex space-x-2">
+          <Input
+            type="text"
+            placeholder="Add a new task..."
+            value={newTodo}
+            onChange={(e) => setNewTodo(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="flex-grow"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <Button
+            onClick={addTodo}
+            className="bg-gradient-to-r from-blue-600 via-purple-600 to-black text-white hover:opacity-90 transition-opacity"
+          >
+            <PlusCircle className="w-5 h-5 mr-1" />
+            Add
+          </Button>
+        </div>
+        <ul className="space-y-2">
+          {todos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onDelete={deleteTodo}
+              onToggleImportant={toggleImportant}
+            />
+          ))}
+        </ul>
+        {todos.length === 0 && (
+          <p className="text-center text-gray-500">
+            No todos yet. Add one above!
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface TodoItemProps {
+  todo: Todo;
+  onDelete: (id: number) => void;
+  onToggleImportant: (id: number) => void;
+}
+
+function TodoItem({ todo, onDelete, onToggleImportant }: TodoItemProps) {
+  const [offset, setOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - startX.current;
+    setOffset(Math.max(-100, Math.min(100, diff)));
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    if (offset < -50) {
+      setOffset(-100);
+    } else if (offset > 50) {
+      setOffset(100);
+    } else {
+      setOffset(0);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      if (isDragging) {
+        handleTouchEnd();
+      }
+    };
+
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  return (
+    <div className="relative overflow-hidden">
+      <div
+        className="bg-gray-100 rounded-lg p-3 shadow-sm transition-all hover:shadow-md flex items-center justify-between cursor-grab active:cursor-grabbing"
+        style={{
+          transform: `translateX(${offset}px)`,
+          transition: isDragging ? "none" : "transform 0.3s ease-out",
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={(e) => {
+          startX.current = e.clientX;
+          setIsDragging(true);
+        }}
+        onMouseMove={(e) => {
+          if (isDragging) {
+            const diff = e.clientX - startX.current;
+            setOffset(Math.max(-100, Math.min(100, diff)));
+          }
+        }}
+      >
+        <span
+          className={`flex-grow ${
+            todo.isImportant ? "font-bold text-blue-600" : ""
+          }`}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          {todo.text}
+        </span>
+      </div>
+      <Button
+        onClick={() => onDelete(todo.id)}
+        className="absolute top-0 right-full h-full px-3 bg-red-500 text-white"
+        style={{
+          transform: `translateX(${100 + offset}px)`,
+        }}
+      >
+        <Trash2 className="w-5 h-5" />
+        <span className="sr-only">Delete todo</span>
+      </Button>
+      <Button
+        onClick={() => onToggleImportant(todo.id)}
+        className={`absolute top-0 left-full h-full px-3 ${
+          todo.isImportant ? "bg-yellow-500" : "bg-gray-400"
+        } text-white`}
+        style={{
+          transform: `translateX(${offset - 100}px)`,
+        }}
+      >
+        <Star className="w-5 h-5" />
+        <span className="sr-only">
+          {todo.isImportant ? "Unmark as important" : "Mark as important"}
+        </span>
+      </Button>
     </div>
   );
 }
